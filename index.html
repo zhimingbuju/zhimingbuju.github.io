@@ -1,16 +1,273 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<style>
-  .body{
-    font-size:1000px;
-  }
-</style>
-<javascript>
-</javascript>
-<head>
-<body>
-  <div class="body">
-  hello world
-  </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>马踏棋盘</title>
+    <style>
+        body{
+            background-color:white;
+        }
+        .title{
+            font-size:30px;
+            font-family: "微软雅黑";
+            font-weight:300;
+            top:10%;
+            left:50%;
+            position:absolute;
+            transform: translate(-50%,0%);
+        }
+        p{
+            font-size: 18px;
+            font-weight: 400;
+            font-family: '微软雅黑';
+            color:black;
+        }
+        input{
+            width:150px;
+            height:15px;
+            border-radius:10 ;
+        }
+        button{
+            width:100px;
+            height:30px;
+            font-size: 18px;
+            font-weight: 300;
+            font-family: "微软雅黑";
+            background-color: #99cc99;
+            color:white;
+            margin-left: 100px;
+            border:none;
+            cursor: pointer;
+            
+        }
+        .body{
+            position:absolute;
+            left:50%;
+            top:60%;
+            transform: translate(-50%,0%);
+            
+        }
+        .root{
+            width:300px;
+            height:300px;
+            background-color: white;
+            top:20%;
+            left:50%;
+            position:absolute;
+            transform: translate(-50%,0%);
+        }
+        .table{
+           
+            width:280px;
+            height:280px;
+            border-collapse: collapse;
+            text-align: center;
+            margin-left: 10px;
+        }
+        td{
+            width:30px;
+            height:30px;
+            /* color:white;
+            background-color: #99cc99; */
+        }
+        
+
+    </style>
+    <script>
+    function direction(){
+        this.x;
+        this.y;
+        this.way_out;
+    }
+
+    var dx=[-2,-1,1,2,2,1,-1,-2];
+    var dy=[1,2,2,1,-1,-2,-2,-1];
+
+    var N=8;
+    
+    var chessboard=new Array();
+    for(let i=0;i<N;i++){
+        chessboard[i]=new Array();
+    }
+
+    function wayOut(x,y){
+        let count=0;
+        let tx,ty,i;
+        if(x<0 || x>N-1 || y<0 || y>N-1 || chessboard[x][y]!==0){
+            return 9;
+        }
+        for(i=0; i<N; i++){
+            tx = x+dx[i];
+            ty = y+dy[i];
+         
+            if(tx>-1 && tx<N && ty>-1 && ty<N && chessboard[tx][ty]===0)
+                count++;
+        }
+        return count;
+    }
+
+    function sort(next1){
+        next=new Array();
+        for(let k=0;k<N;k++)
+            next[k]=new direction();
+        next=next1;
+        let i,j,index;
+        let temp=new direction(next);
+        for(let i=0;i<N;i++){
+            index=i;
+            for(let j=i+1;j<N;j++){
+                if(next[index].way_out>next[j].way_out)
+                    index=j;
+            }
+            if(i!=index){
+                temp=next[i];
+                next[i]=next[index];
+                next[index]=temp;
+            }
+        }
+    }
+    function find(x,y){
+        let z=new Array();
+        let ans=[];
+        for(let i=0;i<N;i++){
+            z[i]=new Array();
+        }
+        for(let i=0;i<N;i++){
+            for(let j=0;j<N;j++){
+                z[i][j]=0;
+            }
+        }  
+        z=y;
+        for(let i=0;i<N;i++){
+            for(let j=0;j<N;j++){
+                if(z[i][j]===x){
+                    ans[0]=i;
+                    ans[1]=j;
+                }
+                    
+            }
+        }
+        return ans;
+    }
+
+    function move(x,y,step){
+        let i,j;
+        let tx,ty;
+   
+        if(step===N*N){
+            
+            for(i=0; i<N; i++){  
+                for(j=0; j<N; j++){
+                    if(chessboard[i][j]===0)
+                        chessboard[i][j]=64;
+                    let t=i*N+j;
+                    let t2=t+1;
+                    let temp=find(t2,chessboard);
+                    
+                    let t3=temp[0]*N+temp[1];
+                    let str="td-"+t3;
+                    let insert='<td>'+t2+'</td>';
+                    
+                    
+                   
+                    setTimeout(function (){
+                        let td=document.getElementById(str);
+                        td.innerHTML=insert;
+                        if(t2%2===0){
+                            td.style.backgroundColor='black';
+                            td.style.color='white';
+                        }
+                        else{
+                            td.style.backgroundColor='white';
+                            td.style.color='black';
+                        }
+                       
+                    },1000*t);
+                    
+                }
+            }
+        }
+        next2=new Array();
+        for(let k=0;k<N;k++)
+            next2[k]=new direction();
+        for(i=0; i<N; i++){
+            let temp = new direction();
+            temp.x = x+dx[i];
+            temp.y = y+dy[i];
+            next2[i] = temp;
+            //循环得到下个棋子N处位置的下个出路的个数
+            next2[i].way_out = wayOut(temp.x, temp.y);  
+        }
+
+        sort(next2);
+
+        for(i=0; i<N; i++){
+            tx = next[i].x;
+            ty = next[i].y;
+            chessboard[tx][ty]=step;
+            move(tx, ty, step+1);
+                /*如果上面Move()往下一步走不通，则回溯到这里
+                重置chessboard[tx][ty]为0，接着i++,又循环...... */
+            chessboard[tx][ty] = 0;
+        }  
+    }
+
+    function createtable(){
+        var htmlstr="<table class='table' border='1px'>";
+        for(i=0; i<8; i++){
+            htmlstr+="<tr>";
+            for(j=0; j<8; j++){
+                let t=i*8+j;
+                htmlstr+='<td id="td-'+t+'"></td>';   
+            }            
+            htmlstr+="</tr>"; 
+        }   
+        htmlstr+="</table>";
+        document.getElementById('root').innerHTML=htmlstr;
+    }
+    function main(){
+        
+        let i,j;
+        for(i=0;i<N;i++){
+            for(j=0;j<N;j++){
+                chessboard[i][j]=0;
+            }
+        }  
+
+        var P1=document.getElementById('position').value;
+        var P=parseInt(P1);
+       
+        
+        let x1=parseInt(P/10);
+        let y1=P%10;
+        chessboard[x1][y1]=1;
+        move(x1,y1,2);
+    }
+    </script>
+</head>
+<body onload="createtable()">
+    <div class='title'>
+        算法设计第十五组
+    </div>
+    <div class='root' id='root'>
+    
+    </div>
+
+    <div class='body'>
+        <p >请输入棋盘大小&nbsp&nbsp
+        <input id='size'/>
+        </p>
+        
+
+        <p>请输入初始位置&nbsp&nbsp
+        <input id='position'/>
+        </p>
+        <br/>
+
+        <button onclick="main()" name='submit'>提交</button>
+    </div>
 </body>
+
 </html>
